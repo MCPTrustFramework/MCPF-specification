@@ -1,9 +1,9 @@
 # MPension Fund Agent Name Service (ANS) Specification
 ## Human-Readable Agent Discovery and Resolution
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft  
-**Last Updated:** December 2025
+**Last Updated:** January 2026
 
 ---
 

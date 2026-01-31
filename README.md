@@ -1,7 +1,7 @@
 # MCPF Specification
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Specification Version](https://img.shields.io/badge/Version-1.0.0--alpha-blue.svg)](https://github.com/MCPTrustFramework/MCPF-specification/releases)
+[![Specification Version](https://img.shields.io/badge/Version-1.1.0--alpha-blue.svg)](https://github.com/MCPTrustFramework/MCPF-specification/releases)
 [![W3C DID](https://img.shields.io/badge/W3C-DID%20Core%20v1.0-green.svg)](https://www.w3.org/TR/did-core/)
 [![W3C VC](https://img.shields.io/badge/W3C-VC%20Data%20Model%20v1.1-green.svg)](https://www.w3.org/TR/vc-data-model/)
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-brightgreen.svg)](https://modelcontextprotocol.io)
@@ -82,6 +82,10 @@ See: [MCPF-python](https://github.com/MCPTrustFramework/MCPF-python)
 npm install @mcpf/sdk
 ```
 See: [MCPF-typescript](https://github.com/MCPTrustFramework/MCPF-typescript)
+
+## 🔐 Security Notice
+
+As of **v1.1.0-alpha**, MCPF compliance **requires** a challenge-response endpoint at `/.well-known/mcp/challenge` to prove private key ownership. DID:Web alone does not confirm control of the corresponding private key, so all entities must implement the challenge endpoint and declare it in their credentials before they are considered compliant. This is a breaking change for existing deployments.
 
 ## 🏗️ Architecture Overview
 
@@ -181,20 +185,21 @@ This allows free use, modification, and distribution for both commercial and non
 
 ## 🗺️ Roadmap
 
-**v1.0.0-alpha** (Current)
-- ✅ Core specifications complete
-- ✅ JSON schemas published
+**v1.1.0-alpha** (Current)
+- ✅ Mandatory challenge-response endpoint requirement
+- ✅ Three-tier compliance model (Basic, Self-Verified, Registry-Verified)
+- ✅ Challenge endpoint schema and examples
 - ✅ Reference implementations (Python)
 - 🚧 TypeScript SDK (in progress)
 - 🚧 Conformance tests (in progress)
 
-**v1.0.0-beta** (Q1 2026)
+**v1.1.0-beta** (Q1 2026)
 - Production-ready reference implementations
 - Complete conformance test suite
 - Multiple production deployments
 - Community feedback incorporated
 
-**v1.0.0** (Q2 2026)
+**v1.1.0** (Q2 2026)
 - Stable specification
 - Full multi-language SDK support
 - W3C standards track submission
@@ -202,6 +207,6 @@ This allows free use, modification, and distribution for both commercial and non
 
 ---
 
-**Last Updated:** December 31, 2025  
-**Version:** 1.0.0-alpha  
+**Last Updated:** January 31, 2026  
+**Version:** 1.1.0-alpha  
 **Status:** Active Development

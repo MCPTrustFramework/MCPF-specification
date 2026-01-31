@@ -1,9 +1,9 @@
 # MPension Fund MCP Registry Specification
 ## MCP Server Governance and Trust Layer
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft  
-**Last Updated:** December 2025
+**Last Updated:** January 2026
 
 ---
 
