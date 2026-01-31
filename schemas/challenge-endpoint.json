@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcpf.dev/schemas/challenge-endpoint-v1.json",
+  "title": "MCPF Challenge-Response Protocol",
+  "description": "Schema for mandatory challenge-response endpoint to prove private key ownership",
+  
+  "definitions": {
+    "challengeRequest": {
+      "type": "object",
+      "required": ["challenge"],
+      "properties": {
+        "challenge": {
+          "type": "string",
+          "description": "Base64-encoded random bytes (minimum 32 bytes recommended)",
+          "pattern": "^[A-Za-z0-9+/=]+$",
+          "minLength": 44
+        },
+        "nonce": {
+          "type": "string",
+          "description": "Optional client-generated nonce for replay protection",
+          "pattern": "^[A-Za-z0-9-]+$"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of challenge generation"
+        }
+      }
+    },
+    
+    "challengeResponse": {
+      "type": "object",
+      "required": ["challenge", "signature", "publicKey", "verificationMethod", "algorithm", "signedAt"],
+      "properties": {
+        "challenge": {
+          "type": "string",
+          "description": "Echo of the challenge from request",
+          "pattern": "^[A-Za-z0-9+/=]+$"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Base64-encoded signature of challenge bytes",
+          "pattern": "^[A-Za-z0-9+/=]+$"
+        },
+        "publicKey": {
+          "type": "string",
+          "description": "Multibase-encoded public key (matches DID document)",
+          "pattern": "^z[1-9A-HJ-NP-Za-km-z]+$"
+        },
+        "verificationMethod": {
+          "type": "string",
+          "description": "DID URL of verification method used for signing",
+          "pattern": "^did:[a-z0-9]+:[^#]+#[^#]+$"
+        },
+        "algorithm": {
+          "type": "string",
+          "enum": ["Ed25519", "ES256"],
+          "description": "Signature algorithm used"
+        },
+        "signedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when signature was created"
+        },
+        "nonce": {
+          "type": "string",
+          "description": "Echo of nonce from request if provided"
+        }
+      }
+    },
+    
+    "challengeError": {
+      "type": "object",
+      "required": ["error", "message"],
+      "properties": {
+        "error": {
+          "type": "string",
+          "enum": [
+            "invalid_challenge",
+            "signing_failed",
+            "rate_limit_exceeded",
+            "internal_error"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error description"
+        },
+        "retryAfter": {
+          "type": "integer",
+          "description": "Seconds to wait before retry (for rate limiting)"
+        }
+      }
+    }
+  }
+}
