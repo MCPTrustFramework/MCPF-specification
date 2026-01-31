@@ -1,9 +1,9 @@
 # MPension Fund Component Interoperability Specification
 ## How the Four Components Work Together
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft  
-**Last Updated:** December 2025
+**Last Updated:** January 2026
 
 ---
 
