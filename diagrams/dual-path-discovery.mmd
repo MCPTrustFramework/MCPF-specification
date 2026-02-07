@@ -1,0 +1,42 @@
+sequenceDiagram
+    participant AI as AI Agent<br/>(Claude, ChatGPT, Cursor)
+    participant MCP as MCP Server
+    participant WK as .well-known Endpoints
+    participant Reg as Trust Registry
+    participant Crawler as Crawler / SDK
+
+    Note over AI,Crawler: PATH A: Tool-Based Discovery (AI Clients)
+
+    AI->>MCP: 1. tools/list
+    MCP-->>AI: Returns tools including "identify"
+    AI->>MCP: 2. Call identify tool
+    MCP-->>AI: Returns identity + verification URLs
+
+    rect rgb(220, 240, 255)
+        Note over AI: AI evaluates trust from identify response
+        AI->>AI: 3a. Check framework.name == "MCPF"
+        AI->>AI: 3b. Check credentials.credential_url
+        AI->>AI: 3c. Check verification URLs
+    end
+
+    Note over AI,Crawler: PATH B: HTTP-Based Discovery (Registries)
+
+    Crawler->>WK: 4. GET /.well-known/did.json
+    WK-->>Crawler: Returns DID document
+
+    Crawler->>WK: 5. GET /.well-known/mcp/manifest.json
+    WK-->>Crawler: Returns signed manifest
+
+    Crawler->>WK: 6. POST /.well-known/mcp/challenge
+    WK-->>Crawler: Returns signed challenge response
+
+    Crawler->>Reg: 7. Verify credential at trust registry
+    Reg-->>Crawler: Credential valid + not revoked
+
+    rect rgb(200, 255, 200)
+        Note over AI,Crawler: BRIDGE: identify tool returns .well-known URLs
+        Note over AI,Crawler: Both paths return CONSISTENT information
+    end
+
+    Note over MCP: Single source of truth
+    Note over MCP: Tool bridges to HTTP for deeper verification

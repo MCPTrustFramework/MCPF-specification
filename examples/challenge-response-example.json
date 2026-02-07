@@ -1,24 +1,19 @@
 {
   "description": "Complete challenge-response verification flow for MCPF compliance",
-  
   "step1_generate_challenge": {
     "description": "Client generates random challenge",
-    "code": "const challenge = crypto.randomBytes(32).toString('base64');",
     "result": {
       "challenge": "a7f3j8h2k9m4n5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0==",
       "nonce": "client-nonce-abc123",
       "timestamp": "2026-01-31T19:00:00Z"
     }
   },
-  
   "step2_send_challenge": {
     "description": "Client sends challenge to server endpoint",
     "request": {
       "method": "POST",
       "url": "https://llm.kis.gov.lv/.well-known/mcp/challenge",
-      "headers": {
-        "Content-Type": "application/json"
-      },
+      "headers": {"Content-Type": "application/json"},
       "body": {
         "challenge": "a7f3j8h2k9m4n5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0==",
         "nonce": "client-nonce-abc123",
@@ -26,26 +21,10 @@
       }
     }
   },
-  
-  "step3_server_signs": {
-    "description": "Server signs challenge with private key",
-    "serverProcess": [
-      "1. Decode challenge from base64",
-      "2. Load private key from environment (MCPF_PRIVATE_KEY)",
-      "3. Sign challenge bytes using Ed25519",
-      "4. Encode signature as base64",
-      "5. Return response with signature and public key"
-    ]
-  },
-  
   "step4_server_response": {
     "description": "Server returns signed response",
     "response": {
       "status": 200,
-      "headers": {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
-      },
       "body": {
         "challenge": "a7f3j8h2k9m4n5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0==",
         "signature": "z58DAdFfa9SkqZMVPxAQpic7ndSayn1PzZs6ZjWp1CktyGesjuTRelDqchfcFd9SkqZ...",
@@ -54,58 +33,6 @@
         "algorithm": "Ed25519",
         "signedAt": "2026-01-31T19:00:01Z",
         "nonce": "client-nonce-abc123"
-      }
-    }
-  },
-  
-  "step5_client_verification": {
-    "description": "Client verifies signature",
-    "verificationSteps": [
-      {
-        "step": "1. Fetch DID document",
-        "url": "https://llm.kis.gov.lv/.well-known/did.json",
-        "result": "Retrieved DID document with public key"
-      },
-      {
-        "step": "2. Extract public key from DID",
-        "verificationMethod": "did:web:llm.kis.gov.lv#key-1",
-        "publicKey": "z6MkjWGNnJsdyvutfbsytFJhkwDwyHkMkfWVL8X1fS1yBm2w"
-      },
-      {
-        "step": "3. Verify public key matches response",
-        "result": "✓ Public keys match"
-      },
-      {
-        "step": "4. Decode signature and challenge",
-        "result": "✓ Decoded successfully"
-      },
-      {
-        "step": "5. Verify signature using ed25519",
-        "code": "ed25519.verify(signature, challengeBytes, publicKeyBytes)",
-        "result": "✓ Signature valid"
-      },
-      {
-        "step": "6. Check timestamp freshness",
-        "signedAt": "2026-01-31T19:00:01Z",
-        "now": "2026-01-31T19:00:02Z",
-        "result": "✓ Within acceptable time window (< 5 minutes)"
-      }
-    ],
-    "finalResult": {
-      "verified": true,
-      "message": "Server controls private key for did:web:llm.kis.gov.lv",
-      "complianceLevel": "MCPF Self-Verified (Level 2)"
-    }
-  },
-  
-  "error_example": {
-    "description": "Example error response",
-    "response": {
-      "status": 429,
-      "body": {
-        "error": "rate_limit_exceeded",
-        "message": "Too many verification requests. Please try again later.",
-        "retryAfter": 60
       }
     }
   }

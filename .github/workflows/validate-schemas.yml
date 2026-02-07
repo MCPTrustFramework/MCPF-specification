@@ -25,10 +25,28 @@ jobs:
     - name: Validate JSON syntax
       run: |
         echo "Validating JSON files..."
-        for file in schemas/*.json examples/*.json; do
-          python -m json.tool "$file" > /dev/null && echo "✓ $file valid" || (echo "✗ $file invalid" && exit 1)
+        for file in schemas/*.json examples/*.json examples/identify-tool/*.json; do
+          if [ -f "$file" ]; then
+            python -m json.tool "$file" > /dev/null && echo "✓ $file valid" || (echo "✗ $file invalid" && exit 1)
+          fi
         done
     
     - name: Validate examples against schemas
       run: |
-        echo "Schema validation against examples will be added in future release"
+        python -c "
+        import json, jsonschema, glob
+
+        # Validate identify tool response example against schema
+        with open('schemas/identify-tool-response.json') as f:
+            schema = json.load(f)
+        for example_file in glob.glob('examples/identify-tool/*-response*.json'):
+            with open(example_file) as f:
+                example = json.load(f)
+            try:
+                jsonschema.validate(example, schema)
+                print(f'✓ {example_file} validates against identify-tool-response schema')
+            except jsonschema.ValidationError as e:
+                print(f'✗ {example_file}: {e.message}')
+                exit(1)
+        print('All schema validations passed')
+        "

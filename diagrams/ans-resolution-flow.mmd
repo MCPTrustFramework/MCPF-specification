@@ -1,39 +1,25 @@
 flowchart TD
     Start([User query:<br/>fraud-detector.finance.bank.agent]) --> Parse[Parse ANS name]
-    
     Parse --> CheckCache{Check<br/>cache?}
-    
     CheckCache -->|Cache hit| ReturnCached[Return cached result]
     CheckCache -->|Cache miss| QueryDB[Query ANS database]
-    
     QueryDB --> Found{Name<br/>found?}
-    
     Found -->|No| NotFound[Return 404 + suggestions]
     Found -->|Yes| GetRecord[Retrieve ANS record]
-    
     GetRecord --> VerifyZone[Verify zone authority]
-    
     VerifyZone --> Valid{Zone<br/>valid?}
-    
     Valid -->|No| Unauthorized[Return 401 unauthorized]
     Valid -->|Yes| GetDID[Resolve DID document]
-    
     GetDID --> CheckCert[Verify ANS certificate]
-    
     CheckCert --> CertValid{Certificate<br/>valid?}
-    
     CertValid -->|No| InvalidCert[Return 403 invalid cert]
     CertValid -->|Yes| BuildResponse[Build response:<br/>DID + Agent Card + Certificate]
-    
     BuildResponse --> CacheResult[Cache result<br/>TTL=3600s]
-    
     CacheResult --> Return([Return to user])
-    
     ReturnCached --> Return
     NotFound --> Return
     Unauthorized --> Return
     InvalidCert --> Return
-    
     style Start fill:#e1f5ff
     style Return fill:#e1f5ff
     style Found fill:#fff4e1

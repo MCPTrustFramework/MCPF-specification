@@ -1,26 +1,32 @@
 MCPF-specification/
-├── README.md                              [Professional README with GitHub badges]
+├── README.md                              [Professional README with GitHub badges — UPDATED v1.2]
 ├── CONTRIBUTING.md                        [Contribution guidelines]
 ├── LICENSE-MIT                            [MIT License for code/schemas]
 ├── LICENSE-CC-BY-4.0                      [CC BY 4.0 for documentation]
 ├── .gitignore                             [Git ignore rules]
-├── STRUCTURE.txt                          [This file - repository structure]
+├── STRUCTURE.txt                          [This file — repository structure]
 │
 ├── specs/                                 [Core specification documents]
-│   ├── MCPF-core.md                      [~17 KB - DID/VC infrastructure]
-│   ├── MCPF-mcp-registry.md              [~25 KB - MCP registry specification]
-│   ├── MCPF-ans.md                       [~17 KB - Agent Name Service]
-│   ├── MCPF-a2a-registry.md              [~16 KB - Agent-to-Agent registry]
-│   └── MCPF-interop.md                   [~23 KB - Integration specification]
+│   ├── MCPF-core.md                      [DID/VC infrastructure, compliance levels — UPDATED v1.2]
+│   ├── MCPF-tool-identity.md             [NEW — Tool-based identity discovery spec]
+│   ├── MCPF-core-section-6.3.md          [Challenge endpoint specification]
+│   ├── MCPF-mcp-registry.md              [MCP registry specification]
+│   ├── MCPF-ans.md                       [Agent Name Service]
+│   ├── MCPF-a2a-registry.md              [Agent-to-Agent registry]
+│   └── MCPF-interop.md                   [Integration specification]
 │
 ├── schemas/                               [JSON Schema files]
+│   ├── identify-tool-response.json       [NEW — identify tool response schema]
+│   ├── identify-tool-definition.json     [NEW — identify MCP tool definition schema]
 │   ├── mcp-server-credential.json        [W3C VC for MCP servers]
 │   ├── agent-credential.json             [W3C VC for AI agents]
+│   ├── challenge-endpoint.json           [Challenge-response protocol schema]
 │   ├── ans-name.json                     [ANS name record schema]
 │   ├── a2a-policy.json                   [Delegation policy schema]
 │   └── status-list.json                  [StatusList2021 schema]
 │
 ├── diagrams/                              [Mermaid architecture diagrams]
+│   ├── dual-path-discovery.mmd           [NEW — Tool vs HTTP discovery paths]
 │   ├── system-architecture.mmd           [Complete MCPF architecture]
 │   ├── mcp-verification-workflow.mmd     [MCP server verification flow]
 │   ├── a2a-delegation-workflow.mmd       [Agent delegation workflow]
@@ -28,21 +34,29 @@ MCPF-specification/
 │   └── revocation-propagation.mmd        [Revocation event propagation]
 │
 ├── examples/                              [Example files for quick reference]
+│   ├── identify-tool/                    [NEW — Tool-based identity discovery examples]
+│   │   ├── README.md                     [Implementation guide and quick start]
+│   │   ├── kisc-production-response.json [Live KISC production response]
+│   │   ├── python-example.py             [Python reference implementation]
+│   │   └── typescript-example.ts         [TypeScript reference implementation]
 │   ├── did-document-example.json         [Sample DID document]
 │   ├── mcp-server-credential-example.json [Sample MCP server credential]
-│   └── agent-credential-example.json     [Sample agent credential]
+│   ├── agent-credential-example.json     [Sample agent credential]
+│   ├── challenge-response-example.json   [Challenge-response flow example]
+│   └── challenge-endpoint-verification.js [Node.js verification script]
 │
 └── .github/                               [GitHub configuration]
     └── workflows/                         [CI/CD workflows]
-        ├── validate-schemas.yml          [Validate JSON schemas]
+        ├── validate-schemas.yml          [Validate JSON schemas — UPDATED]
         └── render-diagrams.yml           [Auto-render Mermaid diagrams]
 
-Total Files: 25
-Total Specs: ~98 KB (22,500+ lines)
-Schemas: 5 JSON Schema files
-Diagrams: 5 Mermaid diagrams
-Examples: 3 complete examples
+Total Files: 32
+New in v1.2: 8 files (spec, 2 schemas, 1 diagram, 4 examples)
+Updated in v1.2: 3 files (README, MCPF-core.md, STRUCTURE.txt, validate-schemas.yml)
+Specs: 7 specification documents
+Schemas: 8 JSON Schema files
+Diagrams: 6 Mermaid diagrams
+Examples: 9 example files
 Workflows: 2 GitHub Actions
 
-All content is internationalized (no country-specific references).
 Ready for upload to GitHub: https://github.com/MCPTrustFramework/MCPF-specification

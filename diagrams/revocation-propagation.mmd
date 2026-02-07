@@ -17,21 +17,16 @@ sequenceDiagram
     end
     
     Admin->>DID: Revoke credential(agent_did)
-    
     DID->>Status: Update StatusList<br/>Set bit[index]=1
     Status-->>DID: Bit updated
-    
     DID->>A2A: Notify revocation
     A2A->>A2A: Mark agent as revoked
     A2A->>A2A: Invalidate cache
-    
     DID->>ANS: Notify revocation
     ANS->>ANS: Mark name as inactive
     ANS->>ANS: Invalidate cache
-    
     DID->>Cache: Purge cached records
     Cache->>Cache: Clear all caches for agent_did
-    
     DID->>Agent: Send revocation notification
     
     Note over Status,Agent: Propagation time: <5 seconds

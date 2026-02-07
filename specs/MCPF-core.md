@@ -1,19 +1,20 @@
-# MPension Fund Core Specification
+# MCPF Core Specification
 ## DID/VC Infrastructure, StatusList, and Trust Model
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Draft  
-**Last Updated:** January 2026
+**Last Updated:** February 2026
 
 ---
 
 ## 1. Overview
 
-MPension Fund Core defines the foundational trust infrastructure for agentic AI systems, providing:
+MCPF Core defines the foundational trust infrastructure for agentic AI systems, providing:
 - Decentralized identity for agents, tools, and organizations
 - Verifiable credentials for capabilities and permissions
 - Real-time revocation mechanism
 - Trust model and governance framework
+- Tool-based identity discovery for AI clients
 
 ---
 
@@ -21,7 +22,7 @@ MPension Fund Core defines the foundational trust infrastructure for agentic AI 
 
 ### 2.1 DID Methods
 
-MPension Fund supports the following DID methods:
+MCPF supports the following DID methods:
 
 #### **did:web (Primary)**
 ```
@@ -72,11 +73,6 @@ Use: Ephemeral, self-contained DIDs
 Resolution: Derive public key from identifier
 ```
 
-**Use cases:**
-- Temporary agents
-- Development/testing
-- Peer-to-peer communication
-
 ### 2.2 DID Categories in MCPF
 
 ```
@@ -121,7 +117,7 @@ Issued to agents, defines their role and permissions.
     "role": "specialist",
     "capabilities": ["transaction-analysis", "risk-scoring"],
     "delegationScope": ["read:transactions", "write:risk-flags"],
-    "organization": "Example Bank Singapore"
+    "organization": "Example Bank"
   },
   "credentialStatus": {
     "id": "https://example.gov/status/agents/1#42",
@@ -141,76 +137,17 @@ Issued to agents, defines their role and permissions.
 ```
 
 #### **MCP Server Credential**
-Issued to MCP servers, defines their capabilities and scope.
-
-```json
-{
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://mcpf.dev/schemas/v1"
-  ],
-  "type": ["VerifiableCredential", "MCPServerCredential"],
-  "issuer": "did:web:example.gov",
-  "issuanceDate": "2025-01-15T00:00:00Z",
-  "credentialSubject": {
-    "id": "did:web:weather.example.gov:mcp:api",
-    "name": "National Weather API",
-    "operator": "National Weather Service",
-    "capabilities": ["getCurrentWeather", "getForecast"],
-    "scope": "read",
-    "dataClassification": "public",
-    "endpoint": "https://weather.example.gov/mcp"
-  },
-  "credentialStatus": {
-    "id": "https://example.gov/status/mcp/1#42",
-    "type": "StatusList2021Entry",
-    "statusPurpose": "revocation",
-    "statusListIndex": "42",
-    "statusListCredential": "https://example.gov/status/mcp/1"
-  },
-  "proof": {
-    "type": "Ed25519Signature2020",
-    "created": "2025-01-15T00:00:00Z",
-    "verificationMethod": "did:web:example.gov#key-1",
-    "proofPurpose": "assertionMethod",
-    "proofValue": "z3sG8AdFfa9Skq..."
-  }
-}
-```
+Issued to MCP servers, defines their capabilities and scope. See `schemas/mcp-server-credential.json`.
 
 ### 3.2 Credential Verification Process
 
 ```
 Step 1: Verify Credential Structure
-├─ Check @context validity
-├─ Verify credential type
-└─ Validate required fields
-
-Step 2: Verify Issuer
-├─ Resolve issuer DID
-├─ Retrieve public key
-└─ Confirm issuer is trusted
-
+Step 2: Verify Issuer (resolve DID, retrieve public key)
 Step 3: Verify Signature
-├─ Extract proof value
-├─ Reconstruct signed payload
-├─ Verify signature against public key
-└─ Check signature timestamp
-
 Step 4: Check Expiration
-├─ Verify issuanceDate <= now
-├─ Verify expirationDate > now
-└─ Reject if expired
-
-Step 5: Check Revocation Status
-├─ Resolve statusListCredential
-├─ Extract statusListIndex
-├─ Check bit value (0=valid, 1=revoked)
-└─ Reject if revoked
-
-Step 6: Verify Subject
-├─ Confirm credentialSubject.id matches expected DID
-└─ Validate subject claims
+Step 5: Check Revocation Status (StatusList2021)
+Step 6: Verify Subject claims
 ```
 
 ---
@@ -225,74 +162,24 @@ StatusList2021 provides efficient, privacy-preserving credential revocation:
 - **Speed:** <5ms to check status
 - **Scalability:** 16KB for 131K credentials
 
-### 4.2 Status List Credential
+### 4.2 Checking Revocation Status
 
-```json
-{
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://w3id.org/vc/status-list/2021/v1"
-  ],
-  "id": "https://example.gov/status/agents/1",
-  "type": ["VerifiableCredential", "StatusList2021Credential"],
-  "issuer": "did:web:example.gov",
-  "issuanceDate": "2025-01-01T00:00:00Z",
-  "credentialSubject": {
-    "id": "https://example.gov/status/agents/1#list",
-    "type": "StatusList2021",
-    "statusPurpose": "revocation",
-    "encodedList": "H4sIAAAAAAAAA-3BMQEAAAjAoMWi..."
-  },
-  "proof": {
-    "type": "Ed25519Signature2020",
-    "created": "2025-01-01T00:00:00Z",
-    "verificationMethod": "did:web:example.gov#key-1",
-    "proofPurpose": "assertionMethod",
-    "proofValue": "z4sG8AdFfa9SkqZ..."
-  }
-}
-```
-
-### 4.3 Checking Revocation Status
-
-**Algorithm:**
 ```python
 def check_revocation(credential):
-    # Extract status info
     status = credential['credentialStatus']
     list_url = status['statusListCredential']
     index = int(status['statusListIndex'])
     
-    # Fetch status list
     status_list = fetch(list_url)
-    
-    # Decode compressed bitstring
     compressed = status_list['credentialSubject']['encodedList']
-    bitstring = base64.decode(compressed)
-    bitstring = gzip.decompress(bitstring)
+    bitstring = gzip.decompress(base64.decode(compressed))
     
-    # Check bit at index
     byte_pos = index // 8
     bit_pos = index % 8
     bit_value = (bitstring[byte_pos] >> bit_pos) & 1
     
-    # 0 = valid, 1 = revoked
-    return bit_value == 0
+    return bit_value == 0  # 0 = valid, 1 = revoked
 ```
-
-### 4.4 Revocation Performance
-
-**Metrics (Measured):**
-- Status list fetch: ~3ms (cached)
-- Decompression: ~1ms
-- Bit lookup: <1ms
-- **Total: ~5ms**
-
-**Scalability:**
-- 131,072 credentials per list
-- ~16KB compressed size
-- Can create multiple lists
-- Lists can be CDN-cached
 
 ---
 
@@ -303,15 +190,15 @@ def check_revocation(credential):
 ```
 ┌─────────────────────────────────────────┐
 │        Trust Anchor (Level 0)           │
-│     did:web:example.gov (Government)         │
-│     did:web:veritrust.vc (International)│
+│  did:web:example.gov (Government)       │
+│  did:web:veritrust.vc (International)   │
 └────────────────┬────────────────────────┘
                  │ Issues credentials to
                  ↓
 ┌─────────────────────────────────────────┐
 │    Organization DIDs (Level 1)          │
-│  did:web:bank.com (Example Bank)            │
-│  did:web:hospital.sg (SGH)              │
+│  did:web:bank.com                       │
+│  did:web:hospital.sg                    │
 └────────────────┬────────────────────────┘
                  │ Issues credentials to
                  ↓
@@ -322,110 +209,23 @@ def check_revocation(credential):
 └─────────────────────────────────────────┘
 ```
 
-### 5.2 Trust Anchor Responsibilities
-
-**Government Trust Anchor (did:web:example.gov):**
-- Issues credentials to National entities
-- Operates national registries
-- Maintains status lists
-- Enforces governance policies
-- Conducts audits and compliance checks
-
-**International Trust Anchor (did:web:veritrust.vc):**
-- Issues credentials to international entities
-- Provides cross-border trust
-- Federation with other trust anchors
-- Global MCP server verification
-
-### 5.3 Trust Evaluation Algorithm
+### 5.2 Trust Evaluation Algorithm
 
 ```python
 def evaluate_trust(credential, trusted_anchors):
-    """
-    Evaluate if credential should be trusted
-    """
-    # Step 1: Verify credential structure and signature
     if not verify_credential(credential):
         return False
     
-    # Step 2: Check if issuer is in trusted anchor list
     issuer = credential['issuer']
     if issuer in trusted_anchors:
-        # Direct trust
         return check_not_revoked(credential)
     
-    # Step 3: Check if issuer has credential from trusted anchor
     issuer_credential = get_issuer_credential(issuer)
-    if issuer_credential:
-        if issuer_credential['issuer'] in trusted_anchors:
-            # Transitive trust
-            return (check_not_revoked(issuer_credential) and 
-                    check_not_revoked(credential))
-    
-    # Step 4: Federation check (if enabled)
-    if federation_enabled():
-        for anchor in trusted_anchors:
-            if check_federation(anchor, issuer):
-                return check_not_revoked(credential)
+    if issuer_credential and issuer_credential['issuer'] in trusted_anchors:
+        return (check_not_revoked(issuer_credential) and 
+                check_not_revoked(credential))
     
     return False
-```
-
-### 5.4 Trust Policies
-
-**Issuer Policy:**
-```json
-{
-  "policyId": "gov-sg-issuer-policy-v1",
-  "version": "1.0",
-  "issuer": "did:web:example.gov",
-  "allowedCredentialTypes": [
-    "AgentCredential",
-    "MCPServerCredential",
-    "OrganizationCredential"
-  ],
-  "requirementsForIssuance": {
-    "organizationVerification": true,
-    "securityAudit": true,
-    "complianceCheck": ["PDPA", "CSA-Guidelines"]
-  },
-  "credentialLifetime": {
-    "default": "P1Y",
-    "maximum": "P2Y"
-  },
-  "revocationPolicy": {
-    "immediate": ["security-breach", "malicious-activity"],
-    "notice-period": ["policy-violation", "expired-audit"]
-  }
-}
-```
-
-**Verifier Policy:**
-```json
-{
-  "policyId": "bank-verifier-policy-v1",
-  "version": "1.0",
-  "verifier": "did:web:bank.com",
-  "trustedIssuers": [
-    "did:web:example.gov",
-    "did:web:mas.example.gov",
-    "did:web:veritrust.vc"
-  ],
-  "requiredCredentialTypes": {
-    "agents": ["AgentCredential"],
-    "mcpServers": ["MCPServerCredential"]
-  },
-  "verification": {
-    "checkRevocation": true,
-    "requireNonExpired": true,
-    "minimumKeyStrength": 256
-  },
-  "failureHandling": {
-    "onRevoked": "reject",
-    "onExpired": "reject",
-    "onUnknownIssuer": "manual-review"
-  }
-}
 ```
 
 ---
@@ -435,22 +235,11 @@ def evaluate_trust(credential, trusted_anchors):
 ### 6.1 Supported Algorithms
 
 **Digital Signatures:**
-- **Ed25519** (Recommended)
-  - Key size: 256 bits
-  - Signature size: 512 bits
-  - Fast, secure, widely supported
-  
-- **ECDSA (P-256)** (Alternative)
-  - For existing PKI compatibility
-  - NIST P-256 curve
-
-**Key Derivation:**
-- HKDF-SHA256 for key derivation
-- BIP32/BIP44 for hierarchical keys (optional)
+- **Ed25519** (Recommended) — 256-bit key, 512-bit signature
+- **ECDSA (P-256)** (Alternative) — For existing PKI compatibility
 
 ### 6.2 Key Management
 
-**Key Lifecycle:**
 ```
 Generation → Storage → Usage → Rotation → Revocation
      ↓          ↓        ↓         ↓          ↓
@@ -458,175 +247,74 @@ Generation → Storage → Usage → Rotation → Revocation
    RNG        HSM     Logging   Issued     Updated
 ```
 
-**Storage Options:**
-- Hardware Security Module (HSM) - Production
-- Key Management Service (KMS) - Cloud
-- Encrypted file system - Development
-
-**Key Rotation:**
+**Key Rotation Intervals:**
 - Agents: Every 90 days
 - MCP Servers: Every 180 days
 - Trust Anchors: Every 365 days
-- Emergency rotation: Immediate on compromise
-
----
 
 ### 6.3 Mandatory Challenge Endpoint
 
 **CRITICAL REQUIREMENT:** All MCPF-compliant entities MUST implement a challenge-response endpoint to prove private key ownership.
 
-**Problem Statement:**  
-The W3C DID:Web specification does not mandate proof of private key ownership. Without this requirement, anyone can publish a DID document claiming a public key they don't control, making DID:Web no stronger than self-signed certificates.
-
-**Solution:**  
-MCPF requires all entities to implement a standardized challenge-response endpoint that proves cryptographic control of the private key corresponding to the public key in their DID document.
-
-#### 6.3.1 Challenge Endpoint Specification
-
 **Endpoint:** `POST /.well-known/mcp/challenge`
 
-**Request:**
-```json
-{
-  "challenge": "base64-encoded-random-bytes",
-  "nonce": "optional-client-nonce",
-  "timestamp": "2026-01-31T19:00:00Z"
-}
-```
+See [MCPF-core-section-6.3.md](MCPF-core-section-6.3.md) for full specification and `schemas/challenge-endpoint.json` for the JSON Schema.
 
-**Response:**
-```json
-{
-  "challenge": "base64-encoded-random-bytes",
-  "signature": "base64-encoded-ed25519-signature",
-  "publicKey": "z6Mkj...",
-  "verificationMethod": "did:web:llm.kis.gov.lv#key-1",
-  "algorithm": "Ed25519",
-  "signedAt": "2026-01-31T19:00:00Z"
-}
-```
+### 6.4 MCPF Compliance Levels
 
-**Requirements:**
-- Server MUST sign the exact challenge bytes received
-- Signature MUST be verifiable using public key from DID document
-- Response MUST be returned within 5 seconds
-- Endpoint MUST be rate-limited (max 100 requests/hour per IP)
-- Endpoint MUST support CORS for cross-origin verification
+MCPF defines four levels of compliance. The `identify` MCP tool is **REQUIRED at all levels** (Level 0+) to enable AI client trust discovery. See [MCPF-tool-identity.md](MCPF-tool-identity.md) for the full tool-based identity discovery specification.
 
-#### 6.3.2 Verification Algorithm
-
-```python
-def verify_challenge_response(did, challenge, response):
-    """
-    Verify that an entity controls the private key for their DID
-    """
-    # Step 1: Resolve DID document
-    did_doc = resolve_did(did)
-    
-    # Step 2: Extract public key
-    verification_method = response['verificationMethod']
-    public_key = extract_public_key(did_doc, verification_method)
-    
-    # Step 3: Verify public key matches
-    if public_key != response['publicKey']:
-        raise KeyMismatch("Public key in response doesn't match DID document")
-    
-    # Step 4: Verify signature
-    signature = base64.decode(response['signature'])
-    challenge_bytes = base64.decode(challenge)
-    
-    if not ed25519.verify(signature, challenge_bytes, public_key):
-        raise InvalidSignature("Signature verification failed")
-    
-    # Step 5: Check timestamp freshness (optional)
-    signed_at = parse_datetime(response['signedAt'])
-    if datetime.utcnow() - signed_at > timedelta(minutes=5):
-        raise StaleResponse("Response timestamp too old")
-    
-    return True  # Challenge verified ✓
-```
-
-#### 6.3.3 MCPF Compliance Levels
-
-MCPF defines three levels of compliance based on verification completeness:
-
-**Level 1: Basic DID:Web (NOT MCPF-COMPLIANT)**
-- ✅ DID document at `/.well-known/did.json`
+**Level 0: Self-Attestation (Entry Level)**
+- ✅ `identify` tool exposing server identity and MCPF metadata
+- ❌ No DID document required
 - ❌ No challenge endpoint
-- ❌ No signed manifest
 - ❌ No trust registry entry
 
-**Trust Level:** DNS/TLS only (WEAK)  
-**Status:** Not recommended for production
+**Trust Level:** Self-reported only (MINIMAL)  
+**Status:** Acceptable for experimentation and development  
+**AI Client Trust:** AI agents can read self-attested identity via `identify` tool
+
+**Level 1: DID + Tool Discovery**
+- ✅ `identify` tool with verification URLs (bridging to `.well-known`)
+- ✅ DID document at `/.well-known/did.json`
+- ✅ `.well-known/mcp/manifest.json` signed manifest
+- ❌ No challenge endpoint
+- ❌ No trust registry entry
+
+**Trust Level:** DNS/TLS + tool-discoverable identity (LOW)  
+**Status:** Acceptable for internal/development use  
+**AI Client Trust:** AI agents verify DID existence via URLs returned by `identify`
 
 **Level 2: MCPF Self-Verified**
+- ✅ `identify` tool with full verification URLs
 - ✅ DID document at `/.well-known/did.json`
 - ✅ Challenge endpoint at `/.well-known/mcp/challenge`
 - ✅ Signed manifest
 - ❌ No trust registry entry
 
 **Trust Level:** Cryptographic proof of key ownership (MEDIUM)  
-**Status:** Acceptable for development/testing
+**Status:** Acceptable for staging/pre-production  
+**AI Client Trust:** AI agents verify key ownership via challenge endpoint URL from `identify`
 
 **Level 3: MCPF Registry-Verified (FULL COMPLIANCE)**
+- ✅ `identify` tool with credential URL and full verification URLs
 - ✅ DID document at `/.well-known/did.json`
 - ✅ Challenge endpoint at `/.well-known/mcp/challenge`
 - ✅ Signed manifest
 - ✅ Trust registry entry with verified credential
 
 **Trust Level:** Organizational + cryptographic verification (STRONG)  
-**Status:** Required for production
+**Status:** Required for production  
+**AI Client Trust:** AI agents verify credential from trust anchor via URL from `identify`
 
-#### 6.3.4 Integration with Trust Model
+### 6.5 Dual-Path Discovery
 
-The challenge endpoint integrates with the existing trust model:
+All MCPF-compliant MCP servers MUST support both discovery paths:
 
-```
-Trust Verification Flow (Level 3):
-─────────────────────────────────────
-1. Fetch DID document (DNS/TLS trust)
-2. Challenge private key ownership (cryptographic proof)
-3. Verify credential from trust anchor (organizational trust)
-4. Check revocation status (real-time trust)
+1. **Tool-based discovery** (`identify` tool) — for AI agents interacting via MCP protocol
+2. **HTTP-based discovery** (`.well-known` endpoints) — for crawlers, registries, and verification services
 
-Result: Multi-layer trust verification
-```
-
-#### 6.3.5 Security Considerations
-
-**Challenge Generation:**
-- Use cryptographically secure random bytes (minimum 32 bytes)
-- Include timestamp to prevent replay attacks
-- Optionally include nonce for additional replay protection
-
-**Rate Limiting:**
-- Prevent abuse through brute force attempts
-- Implement exponential backoff on failures
-- Log all verification attempts for audit
-
-**Key Rotation:**
-- During key rotation, support both old and new keys temporarily
-- Challenge endpoint should indicate which key was used
-- Update period: 30 days overlap during rotation
-
-**Attack Prevention:**
-- Prevent challenge replay: track nonces or use short time windows
-- Prevent key oracle attacks: constant-time comparison
-- Prevent DoS: rate limit + CAPTCHA for repeated failures
-
-#### 6.3.6 Comparison to PKI
-
-| PKI Component | MCPF Equivalent |
-|---------------|-----------------|
-| Certificate Signing Request (CSR) | DID document + challenge response |
-| Domain Validation (ACME) | Challenge-response endpoint |
-| Certificate Authority (CA) | Trust Registry |
-| Extended Validation | Organizational verification |
-| Certificate | Verifiable Credential |
-| OCSP / CRL | StatusList2021 |
-| Root CA trust store | Trust registry API |
-
-**Key Difference:** MCPF provides decentralized verification without requiring a central CA, while maintaining comparable security guarantees through cryptographic proof of key ownership.
+Both paths MUST return consistent information. The `identify` tool response bridges to `.well-known` URLs. See [MCPF-tool-identity.md](MCPF-tool-identity.md) for normative requirements and `schemas/identify-tool-response.json` for the response schema.
 
 ---
 
@@ -642,32 +330,18 @@ Result: Multi-layer trust verification
 5. **Replay Attacks:** Timestamps + nonces prevent replay
 
 **Threats Not Addressed:**
-1. **Endpoint Compromise:** If private key stolen, can impersonate until revoked
-2. **Trust Anchor Compromise:** If trust anchor compromised, entire chain affected
-3. **Social Engineering:** Cannot prevent human trust decisions
+1. Endpoint Compromise (if private key stolen, can impersonate until revoked)
+2. Trust Anchor Compromise (entire chain affected)
+3. Social Engineering (cannot prevent human trust decisions)
 
 ### 7.2 Security Best Practices
 
-**For Trust Anchors:**
-- Use HSM for private keys
+- Use HSM for trust anchor private keys
 - Multi-signature for credential issuance
 - Regular security audits
-- Incident response plan
-- Key ceremony for setup
-
-**For Organizations:**
-- Separate keys for agents vs servers
-- Regular credential renewal
-- Monitor for suspicious activity
-- Implement least-privilege
-- Audit trail for all operations
-
-**For Implementers:**
-- Always verify signatures
-- Check revocation status
-- Validate expiration
+- Always verify signatures and check revocation status
 - Use constant-time comparisons
-- Implement rate limiting
+- Implement rate limiting on all verification endpoints
 
 ---
 
@@ -675,21 +349,10 @@ Result: Multi-layer trust verification
 
 ### 8.1 Minimum Requirements
 
-**DID Resolver:**
-- Support did:web resolution
-- Cache DID documents (with TTL)
-- Handle resolution errors gracefully
-
-**VC Verifier:**
-- Verify credential signatures
-- Check revocation status
-- Validate expiration dates
-- Support StatusList2021
-
-**Key Management:**
-- Secure key storage
-- Key rotation capability
-- Audit logging
+- DID Resolver supporting did:web
+- VC Verifier with signature and revocation checking
+- Secure key storage with rotation capability
+- `identify` tool implementation (see MCPF-tool-identity.md)
 
 ### 8.2 Recommended Features
 
@@ -703,47 +366,9 @@ Result: Multi-layer trust verification
 
 ## 9. Governance and Policies
 
-### 9.1 Trust Anchor Governance
+Trust Anchor governance requires legal entity with jurisdiction, published governance framework, security certification, incident response capability, and transparent operations.
 
-**Requirements for Trust Anchor:**
-1. Legal entity with jurisdiction
-2. Published governance framework
-3. Security certification (e.g., ISO 27001)
-4. Incident response capability
-5. Transparent operations
-
-**Governance Model:**
-```
-Board of Directors
-      ↓
-Technical Committee
-      ↓
-Security Team
-      ↓
-Operations Team
-```
-
-### 9.2 Credential Lifecycle
-
-**Registration:**
-1. Entity submits application
-2. Verification of identity
-3. Security assessment
-4. Credential issuance
-5. Publication to registry
-
-**Renewal:**
-1. Periodic re-verification
-2. Security re-assessment
-3. Credential re-issuance
-4. Status list update
-
-**Revocation:**
-1. Incident detection
-2. Investigation
-3. Revocation decision
-4. Status list update (immediate)
-5. Notification to stakeholders
+Credential lifecycle: Registration → Verification → Issuance → Renewal → Revocation.
 
 ---
 
@@ -751,34 +376,9 @@ Operations Team
 
 ### 10.1 Standards Compliance
 
-**W3C:**
-- DID Core v1.0
-- VC Data Model v1.1
-- StatusList2021
-
-**IETF:**
-- OAuth 2.0 (RFC 6749)
-- JWT (RFC 7519)
-- JWK (RFC 7517)
-
-**Regulatory:**
-- National PDPA (data protection)
-- Financial Regulator Technology Risk Management Guidelines
-- CSA Cybersecurity Code of Practice
-
-### 10.2 Audit Requirements
-
-**Annual Audit:**
-- Security controls review
-- Cryptographic implementation
-- Key management practices
-- Incident response readiness
-
-**Continuous Monitoring:**
-- Revocation patterns
-- Verification failures
-- Performance metrics
-- Security alerts
+**W3C:** DID Core v1.0, VC Data Model v1.1, StatusList2021  
+**IETF:** OAuth 2.0 (RFC 6749), JWT (RFC 7519), JWK (RFC 7517), Ed25519 (RFC 8032)  
+**Protocol:** MCP (Model Context Protocol), Google A2A Protocol
 
 ---
 
@@ -787,9 +387,9 @@ Operations Team
 - W3C DID Core: https://www.w3.org/TR/did-core/
 - W3C VC Data Model: https://www.w3.org/TR/vc-data-model/
 - StatusList2021: https://w3c-ccg.github.io/vc-status-list-2021/
-- Ed25519: RFC 8032
-- MPension Fund Specification: https://github.com/MCPTrustFramework/MCPF-specification
+- MCPF Tool-Based Identity: specs/MCPF-tool-identity.md
+- MCPF Specification: https://github.com/MCPTrustFramework/MCPF-specification
 
 ---
 
-**END OF MPension Fund CORE SPECIFICATION**
+**END OF MCPF CORE SPECIFICATION**

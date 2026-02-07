@@ -1,0 +1,43 @@
+{
+  "identity": {
+    "server": {
+      "name": "kisc-arch-kultura-valodu-mcp",
+      "version": "0.2.0",
+      "description": "MCP server for Latvian cultural heritage and language technology architecture documentation"
+    },
+    "operator": {
+      "name": "Kultūras informācijas sistēmu centrs (KISC)",
+      "name_en": "Cultural Information Systems Centre",
+      "jurisdiction": "Latvia",
+      "sector": "Government"
+    },
+    "did": "did:web:llm.kis.gov.lv"
+  },
+  "framework": {
+    "name": "MCPF",
+    "version": "0.1",
+    "layer": 1,
+    "compliance": [
+      "session-trust-metadata",
+      "tool-based-discovery"
+    ],
+    "spec": "https://github.com/MCPTrustFramework/MCPF-specification"
+  },
+  "credentials": {
+    "issuer": "did:web:veritrust.vc",
+    "type": [
+      "VerifiableCredential",
+      "MCPServerVerification"
+    ],
+    "subject": "did:web:llm.kis.gov.lv",
+    "issued": "2026-01-29T10:12:41Z",
+    "credential_url": "https://veritrust.vc/portal/mcp/credentials/aec9930b-9139-4b33-ac6f-ad3bd3d91da0.json"
+  },
+  "verification": {
+    "jwks_uri": "https://llm.kis.gov.lv/.well-known/jwks.json",
+    "did_document": "https://llm.kis.gov.lv/.well-known/did.json",
+    "mcp_manifest": "https://llm.kis.gov.lv/.well-known/mcp/manifest.json",
+    "trust_registry": "https://llm.kis.gov.lv/.well-known/mcp-trust-registry.json"
+  },
+  "_note": "This server implements MCPF Layer 1 trust discovery. Verify credentials at the provided URLs or trust this self-attestation based on your policy."
+}

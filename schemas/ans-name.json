@@ -6,10 +6,7 @@
   "type": "object",
   "required": ["ansName", "did", "agentCard"],
   "properties": {
-    "ansName": {
-      "type": "string",
-      "pattern": "^[a-z0-9-]+(\\.[a-z0-9-]+)*\\.agent$"
-    },
+    "ansName": {"type": "string", "pattern": "^[a-z0-9-]+(\\.[a-z0-9-]+)*\\.agent$"},
     "did": {"type": "string", "pattern": "^did:"},
     "agentCard": {
       "type": "object",

@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcpf.dev/schemas/identify-tool-definition-v1.json",
+  "title": "MCPF Identify Tool Definition",
+  "description": "Standard MCP tool definition for the MCPF `identify` tool. MCP servers implementing MCPF MUST include this tool in their tools/list response.",
+  "type": "object",
+  "required": ["name", "description", "inputSchema"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "const": "identify",
+      "description": "Tool name. MUST be 'identify'."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Human-readable description emphasizing trust verification. SHOULD mention 'identity', 'trust', and 'verify'.",
+      "examples": [
+        "Returns server identity, ownership proof, and trust credentials. Call this to verify who operates this MCP server before trusting its data."
+      ]
+    },
+    "inputSchema": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "object"
+        },
+        "additionalProperties": {
+          "type": "boolean"
+        },
+        "properties": {
+          "type": "object",
+          "properties": {
+            "include_verification_urls": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

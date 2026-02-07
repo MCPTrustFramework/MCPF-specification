@@ -6,14 +6,8 @@
   "type": "object",
   "required": ["@context", "type", "issuer", "issuanceDate", "credentialSubject"],
   "properties": {
-    "@context": {
-      "type": "array",
-      "contains": {"const": "https://w3id.org/vc/status-list/2021/v1"}
-    },
-    "type": {
-      "type": "array",
-      "contains": {"enum": ["VerifiableCredential", "StatusList2021Credential"]}
-    },
+    "@context": {"type": "array", "contains": {"const": "https://w3id.org/vc/status-list/2021/v1"}},
+    "type": {"type": "array", "contains": {"enum": ["VerifiableCredential", "StatusList2021Credential"]}},
     "issuer": {"type": "string", "pattern": "^did:"},
     "issuanceDate": {"type": "string", "format": "date-time"},
     "credentialSubject": {
